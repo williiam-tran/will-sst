@@ -30,8 +30,8 @@ def main():
     print("\n--- 2. Create Custom Voice ---")
 
     # Replace with your actual .wav file path and its exact transcript (including punctuation)
-    sample_audio = Path(__file__).parent / "finetune/dataset/raw_audio/mobai_1.wav"
-    sample_text = "hôm qua thì tớ đang mở bài dở đúng hông? Để tớ mở bài tiếp nhớ! Ờm, lên đến đại học thì có mình tớ ở nơi hoang vu à, tớ không có đứa bạn cấp ba nào luôn, nên là kiểu mình được đà ở một nơi."
+    sample_audio = Path(__file__).parent / "finetune/dataset/raw_audio/mobai_00001.wav"
+    sample_text = "hôm qua thì tớ đang mở bài dở đúng hông? Để tớ mở bài tiếp nhớ! Ờm, lên đến đại học thì có mình tớ ở nơi hoang vu à, tớ không có đứa bạn cấp ba nào luôn, nên là kiểu mình."
 
     if sample_audio.exists():
         voice_name = "Will"
