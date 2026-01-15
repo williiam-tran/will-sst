@@ -22,8 +22,8 @@ training_config = {
     'output_dir': os.path.join("finetune", "output"),
 
     # CONSERVATIVE SETTINGS FOR FULL MODEL: Avoid OOM on RTX 5090
-    'per_device_train_batch_size': 1,   # Minimum to avoid OOM
-    'gradient_accumulation_steps': 1,  # Maintain effective batch = 16
+    'per_device_train_batch_size': 2,   # Minimum to avoid OOM
+    'gradient_accumulation_steps': 4,  # Maintain effective batch = 16
 
     'learning_rate': 2e-4,
     'max_steps': 5000,
@@ -54,6 +54,11 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
+
         # MEMORY-OPTIMIZED FOR FULL MODEL
-        dataloader_num_workers=4,            # Minimal workers
+        dataloader_num_workers=16,            # Minimal workers
+        dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
+        gradient_checkpointing=True,         # ENABLED to save memory (trades speed)
+        torch_compile=True,                 # Disabled - causes memory spike
+        ddp_find_unused_parameters=False,
     )
