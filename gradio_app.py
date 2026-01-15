@@ -1126,4 +1126,4 @@ if __name__ == "__main__":
     if server_name == "0.0.0.0" and os.getenv("GRADIO_SHARE") is None:
         share = False
 
-    demo.queue().launch(server_name=server_name, server_port=server_port, share=share)
+    demo.queue().launch(server_name=server_name, server_port=server_port, share=True)
