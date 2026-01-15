@@ -62,7 +62,7 @@ def main():
     print("\n--- 2.5. Load Fine-tuned LoRA Adapter ---")
 
     # Check if local LoRA exists
-    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-LoRA"
+    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-Vast-LoRA"
 
     if lora_path.exists():
         print(f"🎯 Loading LoRA adapter from: {lora_path}")
@@ -102,8 +102,8 @@ def main():
     audio = tts.infer(
         text=text_input,
         voice=current_voice,
-        temperature=0.7,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
-        top_k=50,
+        temperature=1.2,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
+        top_k=55,
         max_chars=256,  # Ensure proper text chunking
         silence_p=0.2  # Add 0.15s silence between chunks
     )
