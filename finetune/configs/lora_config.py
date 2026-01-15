@@ -17,23 +17,24 @@ lora_config = LoraConfig(
 )
 
 training_config = {
-    'model': "pnnbao-ump/VieNeu-TTS-0.3B",
-    'run_name': "VieNeu-TTS-0.3B-LoRA",
+    'model': "pnnbao-ump/VieNeu-TTS",
+    'run_name': "VieNeu-TTS-Vast-LoRA",
     'output_dir': os.path.join("finetune", "output"),
-    
-    'per_device_train_batch_size': 2, 
-    'gradient_accumulation_steps': 1, 
-    
-    'learning_rate': 2e-4, 
-    'max_steps': 5000,    
+
+    # RTX 5090 OPTIMIZED: 32GB VRAM - maximize batch size
+    'per_device_train_batch_size': 16,  # Increased from 2 (8x larger)
+    'gradient_accumulation_steps': 4,   # Effective batch = 16 * 4 = 64
+
+    'learning_rate': 2e-4,
+    'max_steps': 5000,
     'logging_steps': 50,
     'save_steps': 500,
     'eval_steps': 500,
-    
+
     'warmup_ratio': 0.05,
-    'bf16': True, 
-    
-    'use_4bit': False, 
+    'bf16': True,
+
+    'use_4bit': False,
 }
 
 def get_training_args(config):
@@ -53,7 +54,12 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
-        dataloader_num_workers=2,  # Reduced from 4 to limit CPU usage (60% target)
-        dataloader_pin_memory=True,  # Pin memory for faster GPU transfer
+
+        # RTX 5090 PERFORMANCE OPTIMIZATIONS
+        dataloader_num_workers=32,           # Max out CPU cores for data loading
+        dataloader_pin_memory=True,         # Pin memory for faster GPU transfer
+        dataloader_prefetch_factor=4,       # Prefetch 4 batches ahead
+        gradient_checkpointing=False,       # Disable for speed (we have VRAM)
+        torch_compile=True,                 # PyTorch 2.0 compilation for speed
         ddp_find_unused_parameters=False,
     )

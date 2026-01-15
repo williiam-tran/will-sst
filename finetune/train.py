@@ -18,28 +18,34 @@ from peft import get_peft_model
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ============================================
-# RESOURCE LIMITING: 100% GPU, 60% CPU/RAM
+# RTX 5090 MAXIMUM PERFORMANCE MODE
 # ============================================
-# This configuration allows multitasking during training:
-# - GPU: 100% usage for maximum training speed
-# - CPU: 60% usage (leaves 40% for other tasks)
-# - RAM: 60% usage (leaves 40% for other tasks)
-#
-# To adjust limits, modify the multiplier (0.6 = 60%):
-#   - Higher (0.7-0.8): Faster training, less room for multitasking
-#   - Lower (0.4-0.5): Slower training, more room for multitasking
+# Dedicated server: Use 100% of all resources for fastest training
+# - GPU: 100% (RTX 5090 - 32GB VRAM)
+# - CPU: 100% (all cores for data loading)
+# - RAM: 100% (no artificial limits)
 # ============================================
 
-CPU_RAM_LIMIT = 0.6  # Use 60% of CPU/RAM resources
+# Use all available CPU cores for maximum throughput
+cpu_count = os.cpu_count() or 8
+torch.set_num_threads(cpu_count)
+torch.set_num_interop_threads(cpu_count)
 
-# Limit CPU threads to specified percentage
-cpu_count = os.cpu_count() or 4
-limited_threads = max(1, int(cpu_count * CPU_RAM_LIMIT))
-torch.set_num_threads(limited_threads)
-torch.set_num_interop_threads(limited_threads)
+# Enable TF32 for RTX 5090 (faster matmul operations)
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
-print(f"🔧 Resource limits: Using {limited_threads}/{cpu_count} CPU threads ({int(CPU_RAM_LIMIT*100)}%)")
-print(f"🔧 GPU will use 100% capacity for training")
+# Set CUDA optimal settings
+torch.backends.cudnn.benchmark = True  # Auto-tune for optimal performance
+
+# Optimize CUDA memory allocator for large batches
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+
+print(f"⚡ RTX 5090 MAXIMUM PERFORMANCE MODE")
+print(f"🔧 Using {cpu_count}/{cpu_count} CPU threads (100%)")
+print(f"🔧 GPU: RTX 5090 - 100% capacity, TF32 enabled")
+print(f"🔧 RAM: Unlimited (100% available)")
+print(f"🔧 CUDA Memory: Optimized for large batches")
 
 from vieneu_utils.phonemize_text import phonemize_with_dict
 from finetune.configs.lora_config import lora_config, training_config, get_training_args
@@ -128,37 +134,38 @@ def run_training():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # Calculate RAM limit based on CPU_RAM_LIMIT setting
-    total_ram_gb = psutil.virtual_memory().total / (1024**3)  # Convert to GB
-    ram_limit_gb = int(total_ram_gb * CPU_RAM_LIMIT)
+    # RTX 5090: No memory limits - use everything available
+    total_ram_gb = psutil.virtual_memory().total / (1024**3)
+    print(f"💾 System RAM: {total_ram_gb:.1f}GB (100% available)")
 
-    # Configure memory limits: CPU_RAM_LIMIT% CPU RAM, 100% GPU RAM
-    max_memory = {
-        "cpu": f"{ram_limit_gb}GB",  # Limit CPU RAM based on CPU_RAM_LIMIT
-    }
-
-    # Add GPU devices with no limit (100% usage)
     if torch.cuda.is_available():
-        for i in range(torch.cuda.device_count()):
-            max_memory[i] = f"{torch.cuda.get_device_properties(i).total_memory // (1024**3)}GB"
-        print(f"🔧 RAM limit: {ram_limit_gb}GB / {total_ram_gb:.1f}GB total ({int(CPU_RAM_LIMIT*100)}%)")
-        print(f"🔧 GPU: Using 100% of available VRAM")
-    elif torch.backends.mps.is_available():
-        # MPS (Apple Silicon) - will use 100% GPU automatically
-        print(f"🔧 RAM limit: {ram_limit_gb}GB / {total_ram_gb:.1f}GB total ({int(CPU_RAM_LIMIT*100)}%)")
-        print(f"🔧 MPS (Apple Silicon): Using 100% GPU capacity")
+        gpu_name = torch.cuda.get_device_name(0)
+        gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        print(f"🚀 GPU Detected: {gpu_name}")
+        print(f"💾 GPU VRAM: {gpu_memory:.1f}GB (100% available)")
     else:
-        print(f"🔧 RAM limit: {ram_limit_gb}GB / {total_ram_gb:.1f}GB total ({int(CPU_RAM_LIMIT*100)}%)")
-        print(f"⚠️ No GPU detected, training on CPU only")
+        print(f"⚠️ WARNING: No CUDA GPU detected! Training will be slow.")
 
-    # Load Model with memory constraints
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        dtype=torch.bfloat16,
-        device_map="auto",
-        max_memory=max_memory,
-        low_cpu_mem_usage=True  # Minimize CPU memory during loading
-    )
+    # Load Model - No artificial limits, use all available VRAM
+    try:
+        # Try Flash Attention 2 (fastest for RTX 5090)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            dtype=torch.bfloat16,
+            device_map="auto",
+            torch_dtype=torch.bfloat16,
+            attn_implementation="flash_attention_2",
+        )
+        print("✅ Flash Attention 2 enabled (maximum speed)")
+    except:
+        # Fallback if flash-attn not installed
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            dtype=torch.bfloat16,
+            device_map="auto",
+            torch_dtype=torch.bfloat16,
+        )
+        print("⚠️ Flash Attention 2 not available, using default attention")
     
     # Load Dataset
     dataset_path = os.path.join("finetune", "dataset", "metadata_encoded.csv")
@@ -186,7 +193,10 @@ def run_training():
         data_collator=default_data_collator,
     )
     
-    print("🦜 Bắt đầu quá trình huấn luyện! (Chúc may mắn)")
+    print("🦜 Bắt đầu quá trình huấn luyện!")
+    print(f"⚡ Batch size: {training_config['per_device_train_batch_size']} x {training_config['gradient_accumulation_steps']} = {training_config['per_device_train_batch_size'] * training_config['gradient_accumulation_steps']} (effective)")
+    print(f"⚡ Expected training time: ~45-60 minutes (RTX 5090 optimized)")
+
     trainer.train()
     
     # Save Final Model
