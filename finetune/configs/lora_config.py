@@ -60,7 +60,4 @@ def get_training_args(config):
         dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
         dataloader_prefetch_factor=2,        # Conservative prefetch
         gradient_checkpointing=True,         # ENABLED to save memory (trades speed)
-        optim="adamw_torch_fused",           # Faster fused optimizer
-        torch_compile=False,                 # Disabled - causes memory spike
-        ddp_find_unused_parameters=False,
     )
