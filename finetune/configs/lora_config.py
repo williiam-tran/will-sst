@@ -17,13 +17,13 @@ lora_config = LoraConfig(
 )
 
 training_config = {
-    'model': "pnnbao-ump/VieNeu-TTS",
+    'model': "pnnbao-ump/VieNeu-TTS",  # Full model (larger than 0.3B)
     'run_name': "VieNeu-TTS-Vast-LoRA",
     'output_dir': os.path.join("finetune", "output"),
 
-    # RTX 5090 OPTIMIZED: 32GB VRAM - maximize batch size
-    'per_device_train_batch_size': 16,  # Increased from 2 (8x larger)
-    'gradient_accumulation_steps': 4,   # Effective batch = 16 * 4 = 64
+    # ADJUSTED FOR FULL MODEL: Larger model needs smaller batch
+    'per_device_train_batch_size': 4,   # Reduced from 16 to avoid OOM
+    'gradient_accumulation_steps': 8,   # Increased to maintain effective batch = 32
 
     'learning_rate': 2e-4,
     'max_steps': 5000,
@@ -55,11 +55,12 @@ def get_training_args(config):
         save_total_limit=2,
         report_to="none",
 
-        # RTX 5090 PERFORMANCE OPTIMIZATIONS
-        dataloader_num_workers=32,           # Max out CPU cores for data loading
-        dataloader_pin_memory=True,         # Pin memory for faster GPU transfer
-        dataloader_prefetch_factor=4,       # Prefetch 4 batches ahead
-        gradient_checkpointing=False,       # Disable for speed (we have VRAM)
-        torch_compile=True,                 # PyTorch 2.0 compilation for speed
+        # RTX 5090 PERFORMANCE OPTIMIZATIONS (adjusted for full model)
+        dataloader_num_workers=8,            # Reduced from 32 to avoid overhead
+        dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
+        dataloader_prefetch_factor=2,        # Reduced from 4 for memory conservation
+        gradient_checkpointing=False,        # Disable for speed
+        optim="adamw_torch_fused",           # Faster fused optimizer
+        torch_compile=False,                 # Disabled - causes memory issues with large models
         ddp_find_unused_parameters=False,
     )
