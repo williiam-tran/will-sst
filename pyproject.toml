@@ -10,9 +10,6 @@ override-dependencies = [
 ]
 default-groups = ["gpu"]
 
-[tool.uv.extra-build-dependencies]
-flash-attn = ["torch"]
-
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu128"
@@ -53,6 +50,7 @@ dependencies = [
 
 [project.optional-dependencies]
 gpu = [
+    "lmdeploy; sys_platform != 'darwin'",
     "triton-windows; sys_platform == 'win32'",
     "triton; sys_platform == 'linux'",
     "transformers; sys_platform == 'darwin'",
@@ -61,6 +59,7 @@ gpu = [
 
 [dependency-groups]
 gpu = [
+    "lmdeploy; sys_platform != 'darwin'",
     "triton-windows; sys_platform == 'win32'",
     "triton; sys_platform == 'linux'",
     "transformers; sys_platform == 'darwin'",
@@ -83,6 +82,12 @@ torch = [
 
 torchaudio = [
     { index = "pytorch", marker = "sys_platform != 'darwin'" },
+    { index = "pypi", marker = "sys_platform == 'darwin'" }
+]
+
+lmdeploy = [
+    { url = "https://github.com/InternLM/lmdeploy/releases/download/v0.11.0/lmdeploy-0.11.0+cu128-cp312-cp312-win_amd64.whl", marker = "sys_platform == 'win32' and python_version == '3.12'" },
+    { url = "https://github.com/InternLM/lmdeploy/releases/download/v0.11.0/lmdeploy-0.11.0+cu128-cp312-cp312-manylinux2014_x86_64.whl", marker = "sys_platform == 'linux' and python_version == '3.12'" },
     { index = "pypi", marker = "sys_platform == 'darwin'" }
 ]
 

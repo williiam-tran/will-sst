@@ -62,7 +62,7 @@ def main():
     print("\n--- 2.5. Load Fine-tuned LoRA Adapter ---")
 
     # Check if local LoRA exists
-    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-LoRA"
+    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-Vast-LoRA"
 
     if lora_path.exists():
         print(f"🎯 Loading LoRA adapter from: {lora_path}")
