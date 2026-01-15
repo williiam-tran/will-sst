@@ -12,7 +12,7 @@ def main():
     
     tts = Vieneu(
         backbone_repo="pnnbao-ump/VieNeu-TTS",  # PyTorch version (LoRA compatible)
-        backbone_device="cuda",  # Use "mps" for Apple Silicon, "cuda" for NVIDIA GPU, or "cpu" for CPU-only
+        backbone_device="mps",  # Use "mps" for Apple Silicon, "cuda" for NVIDIA GPU, or "cpu" for CPU-only
     )
 
     print("\n--- 1. Available Preset Voices ---")
@@ -62,7 +62,7 @@ def main():
     print("\n--- 2.5. Load Fine-tuned LoRA Adapter ---")
 
     # Check if local LoRA exists
-    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-Vast-LoRA"
+    lora_path = Path(__file__).parent / "finetune" / "output" / "VieNeu-TTS-0.3B-LoRA"
 
     if lora_path.exists():
         print(f"🎯 Loading LoRA adapter from: {lora_path}")

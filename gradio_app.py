@@ -45,7 +45,7 @@ tts = None
 current_backbone = None
 current_codec = None
 model_loaded = False
-using_lmdeploy = False
+using_lmdeploy = True
 
 # Cache for reference texts
 _ref_text_cache = {}
