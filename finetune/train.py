@@ -3,20 +3,65 @@ import sys
 import json
 import torch
 import random
+import time
 from torch.utils.data import Dataset
 from transformers import (
-    AutoTokenizer, 
-    AutoModelForCausalLM, 
-    Trainer, 
-    default_data_collator
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    Trainer,
+    default_data_collator,
+    TrainerCallback
 )
 from peft import get_peft_model
 
 # Thêm thư mục gốc vào path để import utils
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Optimize CUDA memory allocator
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True,max_split_size_mb:512'
+
+# Enable TF32 for faster matmul on Ampere+ GPUs
+if torch.cuda.is_available():
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True  # Auto-tune kernels
+
 from vieneu_utils.phonemize_text import phonemize_with_dict
 from finetune.configs.lora_config import lora_config, training_config, get_training_args
+
+# Performance monitoring callback
+class PerformanceCallback(TrainerCallback):
+    def __init__(self):
+        self.start_time = None
+        self.step_times = []
+
+    def on_train_begin(self, args, state, control, **kwargs):
+        self.start_time = time.time()
+        print(f"\n⚡ Training started at {time.strftime('%H:%M:%S')}")
+        print(f"⚡ Target steps: {args.max_steps}")
+        print(f"⚡ Effective batch size: {args.per_device_train_batch_size * args.gradient_accumulation_steps}")
+
+    def on_step_end(self, args, state, control, **kwargs):
+        if state.global_step % args.logging_steps == 0:
+            elapsed = time.time() - self.start_time
+            steps_per_sec = state.global_step / elapsed if elapsed > 0 else 0
+            remaining_steps = args.max_steps - state.global_step
+            eta_seconds = remaining_steps / steps_per_sec if steps_per_sec > 0 else 0
+            eta_minutes = eta_seconds / 60
+
+            if torch.cuda.is_available():
+                gpu_mem = torch.cuda.max_memory_allocated() / 1024**3
+                gpu_util = torch.cuda.memory_reserved() / torch.cuda.get_device_properties(0).total_memory * 100
+                print(f"📊 Step {state.global_step}/{args.max_steps} | "
+                      f"{steps_per_sec:.2f} steps/s | "
+                      f"GPU: {gpu_mem:.1f}GB ({gpu_util:.0f}%) | "
+                      f"ETA: {eta_minutes:.1f}min")
+
+    def on_train_end(self, args, state, control, **kwargs):
+        total_time = time.time() - self.start_time
+        avg_speed = state.global_step / total_time
+        print(f"\n✅ Training completed in {total_time/60:.1f} minutes")
+        print(f"✅ Average speed: {avg_speed:.2f} steps/sec")
 
 def preprocess_sample(sample, tokenizer, max_len=2048):
     speech_gen_start = tokenizer.convert_tokens_to_ids('<|SPEECH_GENERATION_START|>')
@@ -102,11 +147,12 @@ def run_training():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         
-    # Load Model
+    # Load Model with Flash Attention 2 for faster training
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         dtype=torch.bfloat16,
-        device_map="auto"
+        device_map="auto",
+        attn_implementation="flash_attention_2"
     )
 
     # Enable gradient checkpointing BEFORE applying LoRA (if using gradient checkpointing)
@@ -139,6 +185,7 @@ def run_training():
         train_dataset=full_dataset,
         eval_dataset=None,
         data_collator=default_data_collator,
+        callbacks=[PerformanceCallback()],
     )
     
     print("🦜 Bắt đầu quá trình huấn luyện! (Chúc may mắn)")
