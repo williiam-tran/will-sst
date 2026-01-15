@@ -10,6 +10,9 @@ override-dependencies = [
 ]
 default-groups = ["gpu"]
 
+[tool.uv.extra-build-dependencies]
+flash-attn = ["torch"]
+
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu128"
