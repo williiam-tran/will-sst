@@ -21,9 +21,9 @@ training_config = {
     'run_name': "VieNeu-TTS-Vast-LoRA",
     'output_dir': os.path.join("finetune", "output"),
 
-    # ADJUSTED FOR FULL MODEL: Larger model needs smaller batch
-    'per_device_train_batch_size': 4,   # Reduced from 16 to avoid OOM
-    'gradient_accumulation_steps': 8,   # Increased to maintain effective batch = 32
+    # CONSERVATIVE SETTINGS FOR FULL MODEL: Avoid OOM on RTX 5090
+    'per_device_train_batch_size': 1,   # Minimum to avoid OOM
+    'gradient_accumulation_steps': 1,  # Maintain effective batch = 16
 
     'learning_rate': 2e-4,
     'max_steps': 5000,
@@ -54,13 +54,6 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
-
-        # RTX 5090 PERFORMANCE OPTIMIZATIONS (adjusted for full model)
-        dataloader_num_workers=8,            # Reduced from 32 to avoid overhead
-        dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
-        dataloader_prefetch_factor=2,        # Reduced from 4 for memory conservation
-        gradient_checkpointing=False,        # Disable for speed
-        optim="adamw_torch_fused",           # Faster fused optimizer
-        torch_compile=False,                 # Disabled - causes memory issues with large models
-        ddp_find_unused_parameters=False,
+        # MEMORY-OPTIMIZED FOR FULL MODEL
+        dataloader_num_workers=4,            # Minimal workers
     )
