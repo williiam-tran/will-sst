@@ -12,7 +12,7 @@ def main():
     
     tts = Vieneu(
         backbone_repo="pnnbao-ump/VieNeu-TTS",  # PyTorch version (LoRA compatible)
-        backbone_device="mps",  # Use "mps" for Apple Silicon, "cuda" for NVIDIA GPU, or "cpu" for CPU-only
+        backbone_device="cuda",  # Use "mps" for Apple Silicon, "cuda" for NVIDIA GPU, or "cpu" for CPU-only
     )
 
     print("\n--- 1. Available Preset Voices ---")
@@ -102,7 +102,7 @@ def main():
     audio = tts.infer(
         text=text_input,
         voice=current_voice,
-        temperature=1.0,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
+        temperature=0.8,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
         top_k=50,
         max_chars=256,  # Ensure proper text chunking
         silence_p=0.2  # Add 0.15s silence between chunks
