@@ -56,9 +56,11 @@ def get_training_args(config):
         report_to="none",
 
         # MEMORY-OPTIMIZED FOR FULL MODEL
-        dataloader_num_workers=16,            # Minimal workers
+        dataloader_num_workers=8,            # Minimal workers
         dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
+        dataloader_prefetch_factor=2,        # Conservative prefetch
         gradient_checkpointing=True,         # ENABLED to save memory (trades speed)
-        torch_compile=True,                 # Disabled - causes memory spike
+        optim="adamw_torch_fused",           # Faster fused optimizer
+        torch_compile=False,                 # Disabled - causes memory spike
         ddp_find_unused_parameters=False,
     )
