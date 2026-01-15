@@ -102,8 +102,8 @@ def main():
     audio = tts.infer(
         text=text_input,
         voice=current_voice,
-        temperature=2.0,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
-        top_k=80,
+        temperature=1.0,  # Adjustable: Lower (0.1) -> Stable, Higher (1.0+) -> Expressive
+        top_k=50,
         max_chars=256,  # Ensure proper text chunking
         silence_p=0.2  # Add 0.15s silence between chunks
     )

@@ -147,12 +147,11 @@ def run_training():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         
-    # Load Model with Flash Attention 2 for faster training
+    # Load Model
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         dtype=torch.bfloat16,
-        device_map="auto",
-        attn_implementation="flash_attention_2"
+        device_map="auto"
     )
 
     # Enable gradient checkpointing BEFORE applying LoRA (if using gradient checkpointing)
