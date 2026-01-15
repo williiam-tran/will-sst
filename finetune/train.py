@@ -14,16 +14,6 @@ from peft import get_peft_model
 
 # Thêm thư mục gốc vào path để import utils
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# Enable TF32 for RTX 5090 (faster matmul operations)
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.allow_tf32 = True
-
-# Set CUDA optimal settings
-torch.backends.cudnn.benchmark = True  # Auto-tune for optimal performance
-
-# Optimize CUDA memory allocator for large batches
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
-
 
 from vieneu_utils.phonemize_text import phonemize_with_dict
 from finetune.configs.lora_config import lora_config, training_config, get_training_args
