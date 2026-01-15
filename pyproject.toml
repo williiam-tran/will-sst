@@ -1,10 +1,5 @@
 [tool.uv]
 index-strategy = "unsafe-best-match"
-required-environments = [
-    "sys_platform == 'win32' and platform_machine == 'AMD64'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "sys_platform == 'darwin' and platform_machine == 'arm64'",
-]
 override-dependencies = [
     "nvidia-nccl-cu12; sys_platform == 'linux'",
 ]
@@ -50,7 +45,6 @@ dependencies = [
 
 [project.optional-dependencies]
 gpu = [
-    "lmdeploy; sys_platform != 'darwin'",
     "triton-windows; sys_platform == 'win32'",
     "triton; sys_platform == 'linux'",
     "transformers; sys_platform == 'darwin'",
@@ -59,7 +53,6 @@ gpu = [
 
 [dependency-groups]
 gpu = [
-    "lmdeploy; sys_platform != 'darwin'",
     "triton-windows; sys_platform == 'win32'",
     "triton; sys_platform == 'linux'",
     "transformers; sys_platform == 'darwin'",
