@@ -104,11 +104,17 @@ def run_training():
         
     # Load Model
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, 
+        model_name,
         dtype=torch.bfloat16,
         device_map="auto"
     )
-    
+
+    # Enable gradient checkpointing BEFORE applying LoRA (if using gradient checkpointing)
+    if training_config.get('gradient_checkpointing', False) or hasattr(get_training_args(training_config), 'gradient_checkpointing') and get_training_args(training_config).gradient_checkpointing:
+        print("🔧 Enabling gradient checkpointing for LoRA compatibility...")
+        model.gradient_checkpointing_enable()
+        model.enable_input_require_grads()
+
     # Load Dataset
     dataset_path = os.path.join("finetune", "dataset", "metadata_encoded.csv")
     if not os.path.exists(dataset_path):
@@ -116,9 +122,9 @@ def run_training():
         return
 
     full_dataset = VieNeuDataset(dataset_path, tokenizer)
-    
+
     print(f"🦜 Total samples: {len(full_dataset)} (eval disabled, training only)")
-    
+
     # Apply LoRA
     print("🦜 Đang áp dụng LoRA adapters...")
     model = get_peft_model(model, lora_config)

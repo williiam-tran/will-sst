@@ -59,5 +59,5 @@ def get_training_args(config):
         dataloader_num_workers=8,            # Minimal workers
         dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
         dataloader_prefetch_factor=2,        # Conservative prefetch
-        gradient_checkpointing=True,         # ENABLED to save memory (trades speed)
+        gradient_checkpointing=False,         # ENABLED to save memory (trades speed)
     )
