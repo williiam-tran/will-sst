@@ -11,7 +11,7 @@ lora_config = LoraConfig(
         "gate_proj", "up_proj", "down_proj"
     ],
     
-    lora_dropout=0.05, 
+    lora_dropout=0.1, 
     bias="none",
     task_type=TaskType.CAUSAL_LM, 
 )
@@ -22,9 +22,8 @@ training_config = {
     'output_dir': os.path.join("finetune", "output"),
 
     # OPTIMIZED FOR FULL MODEL ON RTX 5090
-    'per_device_train_batch_size': 4,   # Increased from 2 (safe increase)
-    'batch_size': 2,
-    'gradient_accumulation_steps': 8,   # Adjusted to maintain effective batch = 9
+    'per_device_train_batch_size': 2, 
+    'gradient_accumulation_steps': 1, 
 
     'learning_rate': 2e-4,
     'max_steps': 5000,
