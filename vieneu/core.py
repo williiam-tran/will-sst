@@ -599,7 +599,7 @@ class VieNeuTTS:
                 do_sample=True,
                 temperature=temperature,
                 top_k=top_k,
-                use_cache=True,
+                use_cache=False,
                 min_new_tokens=50,
             )
         input_length = prompt_tensor.shape[-1]
