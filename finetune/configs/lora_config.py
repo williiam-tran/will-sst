@@ -23,7 +23,8 @@ training_config = {
 
     # OPTIMIZED FOR FULL MODEL ON RTX 5090
     'per_device_train_batch_size': 3,   # Increased from 2 (safe increase)
-    'gradient_accumulation_steps': 3,   # Adjusted to maintain effective batch = 9
+    'batch_size': 2,
+    'gradient_accumulation_steps': 8,   # Adjusted to maintain effective batch = 9
 
     'learning_rate': 2e-4,
     'max_steps': 5000,
@@ -34,7 +35,6 @@ training_config = {
     'warmup_ratio': 0.05,
     'bf16': True,
     'bf16_full_eval': True,             # Full bf16 for eval (faster)
-
     'use_4bit': False,
 }
 
@@ -56,7 +56,8 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
-
+        bias = "none",
+        use_gradient_checkpointing = "unsloth",
         # OPTIMIZED FOR FULL MODEL ON RTX 5090
         dataloader_num_workers=12,           # Increased from 8 (more parallelism)
         dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
