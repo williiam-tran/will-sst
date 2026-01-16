@@ -56,8 +56,6 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
-        use_gradient_checkpointing = "unsloth",
-        # OPTIMIZED FOR FULL MODEL ON RTX 5090
         dataloader_num_workers=12,           # Increased from 8 (more parallelism)
         dataloader_pin_memory=True,          # Pin memory for faster GPU transfer
         dataloader_prefetch_factor=4,        # Increased from 2 (prefetch more batches)
