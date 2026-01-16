@@ -18,7 +18,7 @@ lora_config = LoraConfig(
 
 training_config = {
     'model': "pnnbao-ump/VieNeu-TTS",  # Full model (larger than 0.3B)
-    'run_name': "VieNeu-TTS-Vast-LoRA",
+    'run_name': "VieNeu-TTS-0.5B-LoRA",
     'output_dir': os.path.join("finetune", "output"),
 
     # OPTIMIZED FOR FULL MODEL ON RTX 5090
@@ -56,7 +56,6 @@ def get_training_args(config):
         save_strategy="steps",
         save_total_limit=2,
         report_to="none",
-        bias = "none",
         use_gradient_checkpointing = "unsloth",
         # OPTIMIZED FOR FULL MODEL ON RTX 5090
         dataloader_num_workers=12,           # Increased from 8 (more parallelism)
